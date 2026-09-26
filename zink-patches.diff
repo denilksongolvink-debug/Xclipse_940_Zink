@@ -1,0 +1,109 @@
+diff --git a/src/gallium/drivers/zink/zink_device_info.py b/src/gallium/drivers/zink/zink_device_info.py
+index 4a6a1c4..acde496 100644
+--- a/src/gallium/drivers/zink/zink_device_info.py
++++ b/src/gallium/drivers/zink/zink_device_info.py
+@@ -68,8 +68,7 @@ EXTENSIONS = [
+               features=True),
+     Extension("VK_KHR_maintenance5",
+               alias="maint5",
+-              features=True, properties=True,
+-              required=True),
++              features=True, properties=True),
+     Extension("VK_KHR_maintenance6",
+               alias="maint6",
+               features=True, properties=True),
+diff --git a/src/gallium/drivers/zink/zink_screen.c b/src/gallium/drivers/zink/zink_screen.c
+index c11c6a2..a06aee0 100644
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -22,6 +22,8 @@
+  */
+ 
+ #include "zink_screen.h"
++#include "util/u_inlines.h"
++#include "frontend/sw_winsys.h"
+ 
+ #include "zink_kopper.h"
+ #include "zink_compiler.h"
+@@ -1718,7 +1720,7 @@ zink_get_display_device(const struct zink_screen *screen, uint32_t pdev_count,
+          return i;
+    }
+ 
+-   return -1;
++   return pdev_count ? 0 : -1;
+ }
+ 
+ static int
+@@ -1904,9 +1906,44 @@ zink_flush_frontbuffer(struct pipe_screen *pscreen,
+    struct zink_resource *res = zink_resource(pres);
+    struct zink_context *ctx = zink_context(pctx);
+ 
+-   /* if the surface is no longer a swapchain, this is a no-op */
+-   if (!zink_is_swapchain(res))
++   if (!zink_is_swapchain(res)) {
++      struct sw_winsys *ws = screen->sw_winsys;
++      if (!ws || !winsys_drawable_handle)
++         return;
++      pctx->flush(pctx, NULL, 0);
++      unsigned w = pres->width0, h = pres->height0;
++      struct pipe_transfer *xfer = NULL;
++      uint8_t *src = pipe_texture_map(pctx, pres, level, 0, PIPE_MAP_READ, 0, 0, w, h, &xfer);
++      if (!src) {
++         mesa_loge("ZINK: present sem kopper: map falhou");
++         return;
++      }
++      if (!screen->sw_dt || screen->sw_dt_w != w || screen->sw_dt_h != h) {
++         if (screen->sw_dt)
++            ws->displaytarget_destroy(ws, screen->sw_dt);
++         unsigned stride = 0;
++         screen->sw_dt = ws->displaytarget_create(ws, 0, pres->format, w, h, 64, NULL, &stride);
++         screen->sw_dt_w = w;
++         screen->sw_dt_h = h;
++         screen->sw_dt_stride = stride;
++      }
++      if (screen->sw_dt) {
++         uint8_t *dst = ws->displaytarget_map(ws, screen->sw_dt, PIPE_MAP_WRITE);
++         if (dst) {
++            unsigned n = MIN2(screen->sw_dt_stride, xfer->stride);
++            for (unsigned y = 0; y < h; y++)
++               memcpy(dst + (size_t)y * screen->sw_dt_stride, src + (size_t)y * xfer->stride, n);
++            ws->displaytarget_unmap(ws, screen->sw_dt);
++            ws->displaytarget_display(ws, screen->sw_dt, winsys_drawable_handle, nboxes, sub_box);
++         } else {
++            mesa_loge("ZINK: present sem kopper: dt map falhou");
++         }
++      } else {
++         mesa_loge("ZINK: present sem kopper: dt create falhou");
++      }
++      pipe_texture_unmap(pctx, xfer);
+       return;
++   }
+ 
+    ctx = zink_tc_context_unwrap(pctx);
+ 
+@@ -3862,6 +3899,7 @@ zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *co
+    struct zink_screen *ret = zink_internal_create_screen(config, -1, -1, 0);
+    if (ret) {
+       ret->drm_fd = -1;
++      ret->sw_winsys = winsys;
+    }
+ 
+    return &ret->base;
+diff --git a/src/gallium/drivers/zink/zink_types.h b/src/gallium/drivers/zink/zink_types.h
+index 9c461cf..7d17be0 100644
+--- a/src/gallium/drivers/zink/zink_types.h
++++ b/src/gallium/drivers/zink/zink_types.h
+@@ -1365,8 +1365,13 @@ struct zink_format_props {
+    VkFormatFeatureFlags2 bufferFeatures;
+ };
+ 
++struct sw_winsys;
++struct sw_displaytarget;
+ struct zink_screen {
+    struct pipe_screen base;
++   struct sw_winsys *sw_winsys;
++   struct sw_displaytarget *sw_dt;
++   unsigned sw_dt_w, sw_dt_h, sw_dt_stride;
+ 
+    const char *vendor_name;
+    const char *device_name;
