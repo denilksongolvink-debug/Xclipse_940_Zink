@@ -3,9 +3,9 @@
 set -euo pipefail
 
 MESA_TAG="mesa-26.2.3"
-SRC="$HOME/home/vulkan-samsung-xclipse940/mesa-src"
-PREFIX_OUT="$HOME/home/vulkan-samsung-xclipse940/mesa-zink"
-TP="$HOME/home/vulkan-samsung-xclipse940/termux-packages"
+SRC="$PWD/mesa-src"
+PREFIX_OUT="$PWD/mesa-zink"
+TP="$PWD/termux-packages"
 JOBS="${JOBS:-3}"
 
 step() { printf '\n=== %s\n' "$*"; }
@@ -142,17 +142,17 @@ ninja -C build-zink install >/dev/null
 termux-wake-unlock 2>/dev/null || true
 
 step "7/7 Wrapper e teste"
-mkdir -p "$HOME/bin"
-cat > "$HOME/bin/zink" <<WRAP
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/zink" <<WRAP
 #!/data/data/com.termux/files/usr/bin/bash
-export GALLIUM_DRIVER=zink LIBGL_KOPPER_DISABLE=true
+export GALLIUM_DRIVER=zink 
+export LIBGL_KOPPER_DISABLE=true
 export LIBGL_DRIVERS_PATH="$PREFIX_OUT/lib/dri"
 export LD_LIBRARY_PATH="$PREFIX_OUT/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
-exec "\$@"
 WRAP
-chmod +x "$HOME/bin/zink"
+chmod +x "$HOME/.local/bin/zink"
 
 echo
 echo "Pronto. Suba o Termux:X11 (termux-x11 :0 &) e teste:"
-echo "  DISPLAY=:0 ~/bin/zink glxinfo -B | grep -i renderer"
-echo "  DISPLAY=:0 ~/bin/zink glxgears"
+echo "  DISPLAY=:0 ~/.local/bin/zink glxinfo -B | grep -i renderer"
+echo "  DISPLAY=:0 ~/.local/bin/zink glxgears"
