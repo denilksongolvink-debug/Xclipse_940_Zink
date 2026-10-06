@@ -4,7 +4,7 @@ set -euo pipefail
 trap 'echo ">>> FALHOU na linha $LINENO"' ERR
 
 MESA_TAG="${MESA_TAG:-mesa-26.2.3}"
-BASE="${BASE:$HOME/Xclipse-940-Zink}"
+BASE="${BASE:-$PWD}"
 SRC="$BASE/mesa-26.2.3"          # pasta nova: nao mexe no seu mesa-src antigo
 OUT="$BASE/zink-install"
 VKLIB="$BASE/vklib"
