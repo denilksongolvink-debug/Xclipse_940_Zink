@@ -1,5 +1,3 @@
-cat > ~/install-xclipse-zink.sh <<'SCRIPT'
-
 #!/data/data/com.termux/files/usr/bin/bash
 # Zink (Mesa 26.2.3) na GPU Xclipse 940 / Termux:X11
 set -euo pipefail
@@ -186,6 +184,5 @@ grep -oE '[^ ]*(libgallium|libGLX_mesa)[^ ]*' /proc/$p/maps 2>/dev/null | sort -
 kill $p 2>/dev/null || true
 echo; echo "Uso:  ~/.bin/zink glxgears     (estavel, ~200 FPS)"
 echo "      ~/.bin/zink-dri3 glmark2 (DRI3/dma-buf; so com seu Termux:X11 modificado)"
-SCRIPT
-chmod +x $BASE/install-xclipse-zink.sh
-bash $BASE/install-xclipse-zink.sh 2>&1 | tee $BASE/install-xclipse-zink.log
+
+tee $BASE/install-xclipse-zink.log
