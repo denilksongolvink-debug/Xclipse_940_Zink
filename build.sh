@@ -184,5 +184,3 @@ grep -oE '[^ ]*(libgallium|libGLX_mesa)[^ ]*' /proc/$p/maps 2>/dev/null | sort -
 kill $p 2>/dev/null || true
 echo; echo "Uso:  ~/.bin/zink glxgears     (estavel, ~200 FPS)"
 echo "      ~/.bin/zink-dri3 glmark2 (DRI3/dma-buf; so com seu Termux:X11 modificado)"
-
-tee $BASE/install-xclipse-zink.log
