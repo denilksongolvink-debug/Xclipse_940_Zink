@@ -1,0 +1,10 @@
+prefix=/data/data/com.termux/files/home/Xclipse_940_Zink/Xclipse-940-Zink/zink-install
+includedir=${prefix}/include
+
+dridriverdir=/data/data/com.termux/files/home/Xclipse_940_Zink/Xclipse-940-Zink/zink-install/lib/dri
+
+Name: dri
+Description: Direct Rendering Infrastructure
+Version: 26.2.3
+Requires.private: libdrm >=  2.4.109
+Cflags: -I${includedir}
