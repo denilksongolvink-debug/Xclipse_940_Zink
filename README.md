@@ -8,38 +8,11 @@ Arquitetura
 
 Caminho principal
 
-OpenGL
-  ↓
-Mesa EGL / GLX
-  ↓
-Zink
-  ↓
-Android Vulkan Loader
-  ↓
-/system/lib64/libvulkan.so
-  ↓
-Samsung Proprietary Vulkan
-  ↓
-Xclipse 940
+OpenGL → Mesa EGL / GLX → Zink → Android Vulkan Loader → /system/lib64/libvulkan.so → Samsung Proprietary Vulkan → Xclipse 940
 
 Caminho DRI3 experimental
 
-OpenGL
-  ↓
-Zink
-  ↓
-DRI3 / Present
-  ↓
-Termux:X11 modificado
-  ↓
-AHardwareBuffer / dma-buf
-  ↓
-Android EGL / ANativeWindow
-  ↓
-BufferQueue
-
-O caminho DRI3 depende de uma versão modificada do Termux:X11.
-
+OpenGL → Zink → DRI3 / Present → Termux:X11 modificado → AHardwareBuffer / dma-buf → Android EGL / ANativeWindow → BufferQueue
 ---
 
 Requisitos
@@ -182,15 +155,7 @@ O objetivo final não é limitar artificialmente o FPS.
 
 A investigação atual está concentrada na sincronização entre:
 
-DRI3
-  ↓
-Present
-  ↓
-AHardwareBuffer
-  ↓
-ANativeWindow
-  ↓
-Android BufferQueue
+DRI3 → Present → AHardwareBuffer → ANativeWindow → Android BufferQueue
 
 especialmente no controle de reutilização e liberação dos buffers.
 
@@ -233,17 +198,7 @@ Objetivo do projeto
 
 O objetivo final é obter:
 
-X11
- ↓
-EGL
- ↓
-Mesa
- ↓
-Zink
- ↓
-Samsung Vulkan
- ↓
-Xclipse 940
+X11 → EGL → Mesa → Zink → Samsung Vulkan → Xclipse 940
 
 com apresentação DRI3/dma-buf corretamente sincronizada, sem depender de um limite artificial de FPS.
 
